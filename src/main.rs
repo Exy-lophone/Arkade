@@ -189,7 +189,29 @@ impl TicTacToe {
             }
             let board = Board::new(self.bitboard_cross, self.bitboard_circle);
             terminal.draw(|frame| {
-                frame.render_widget(board, frame.area());
+                let layout = Layout::default()
+                    .direction(Direction::Vertical)
+                    .constraints(vec![Constraint::Percentage(75), Constraint::Percentage(25)])
+                    .split(frame.area());
+                let layout_top = layout[0];
+                let layout_bot = layout[1];
+                let layout = Layout::default()
+                    .direction(Direction::Horizontal)
+                    .constraints(vec![Constraint::Percentage(75), Constraint::Percentage(25)])
+                    .split(layout_top);
+                let layout_top_left = layout[0];
+                let layout_top_right = layout[1];
+                frame.render_widget(board, layout_top_left);
+                frame.render_widget(
+                    Paragraph::new("(X => 0)")
+                        .block(Block::new().title(" <History> ").borders(Borders::ALL)),
+                    layout_top_right,
+                );
+                frame.render_widget(
+                    Paragraph::new("Use the numpad key to place a X/O")
+                        .block(Block::new().title(" <Tips> ").borders(Borders::ALL)),
+                    layout_bot,
+                );
             })?;
         }
         Ok(())
