@@ -4,7 +4,12 @@ use ratatui::style::{Color, Style};
 use ratatui::widgets::{Block, Borders, Widget};
 
 use crate::tictactoe::constant::*;
-use crate::tictactoe::tictactoe::CellType;
+
+enum CellType {
+    Cross,
+    Circle,
+    Empty,
+}
 
 pub struct Board {
     bitboard_cross: u16,

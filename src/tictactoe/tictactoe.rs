@@ -1,6 +1,8 @@
-use crate::tictactoe::board::Board;
+use crate::tictactoe::constant::*;
 use crate::tictactoe::event_handler::EventHandler;
+use crate::tictactoe::{board::Board, tictactoe::GameState::Playing};
 use crossterm::event::{Event, KeyCode, KeyEvent};
+use ratatui::text::Line;
 use ratatui::{
     DefaultTerminal, Frame,
     layout::{Constraint, Direction, Layout, Rect},
@@ -10,10 +12,15 @@ use std::io;
 use std::io::ErrorKind;
 use std::sync::mpsc::TryRecvError;
 
-pub enum CellType {
+enum Player {
     Cross,
     Circle,
-    Empty,
+}
+
+enum GameState {
+    Playing(Player),
+    Win(Player),
+    Draw,
 }
 
 pub struct TicTacToe {
@@ -21,6 +28,7 @@ pub struct TicTacToe {
     bitboard_cross: u16,
     bitboard_circle: u16,
     event_handler: EventHandler,
+    game_state: GameState,
 }
 
 impl TicTacToe {
@@ -30,6 +38,7 @@ impl TicTacToe {
             bitboard_circle: 0,
             bitboard_cross: 0,
             event_handler: EventHandler::new(),
+            game_state: GameState::Playing(Player::Cross),
         }
     }
 
@@ -39,21 +48,13 @@ impl TicTacToe {
             bitboard_circle,
             bitboard_cross,
             event_handler: EventHandler::new(),
+            game_state: GameState::Playing(Player::Cross),
         }
     }
 
     pub fn run(&mut self, terminal: &mut DefaultTerminal) -> io::Result<()> {
         while !self.exit {
-            match self.event_handler.rx.try_recv() {
-                Ok(e) => {
-                    self.handle_events(e);
-                    Ok(())
-                }
-                Err(TryRecvError::Empty) => Ok(()),
-                Err(TryRecvError::Disconnected) => {
-                    Err(io::Error::new(ErrorKind::BrokenPipe, "channel disconected"))
-                }
-            }?;
+            self.handle_events()?;
             terminal.draw(|frame| {
                 let layouts = self.get_layouts(frame.area());
                 self.render_board(frame, layouts.0);
@@ -62,16 +63,6 @@ impl TicTacToe {
             })?;
         }
         Ok(())
-    }
-
-    fn get_cell_type(&self, id: u16) -> CellType {
-        if self.bitboard_cross & id == id {
-            CellType::Cross
-        } else if self.bitboard_circle & id == id {
-            CellType::Circle
-        } else {
-            CellType::Empty
-        }
     }
 
     fn get_layouts(&self, area: Rect) -> (Rect, Rect, Rect) {
@@ -102,23 +93,70 @@ impl TicTacToe {
 
     fn render_tips(&self, frame: &mut Frame, area: Rect) {
         frame.render_widget(
-            Paragraph::new("Use the numpad key to place a X/O")
-                .block(Block::new().title(" <Tips> ").borders(Borders::ALL)),
+            Paragraph::new(vec![
+                Line::from(""),
+                Line::from(""),
+                Line::from("Use numepad key to place X/O"),
+                Line::from(""),
+                Line::from("         7 | 8 | 9          "),
+                Line::from("        ---+---+---         "),
+                Line::from("         4 | 5 | 6          "),
+                Line::from("        ---+---+---         "),
+                Line::from("         1 | 2 | 3          "),
+            ])
+            .block(Block::new().title(" <Tips> ").borders(Borders::ALL)),
             area,
         );
     }
 
-    fn handle_events(&mut self, e: Event) {
-        match e {
-            Event::Key(key_event) => self.handle_key_events(key_event),
-            _ => {}
+    fn handle_events(&mut self) -> io::Result<()> {
+        match self.event_handler.rx.try_recv() {
+            Ok(Event::Key(key_event)) => {
+                self.handle_key_events(key_event);
+                Ok(())
+            }
+            Err(TryRecvError::Empty) => Ok(()),
+            Err(TryRecvError::Disconnected) => {
+                Err(io::Error::new(ErrorKind::BrokenPipe, "channel disconected"))
+            }
+            _ => Ok(()),
         }
     }
 
     fn handle_key_events(&mut self, key_event: KeyEvent) {
         match key_event.code {
             KeyCode::Char('q') if key_event.is_press() => self.exit = true,
+            KeyCode::Char('1') if key_event.is_press() => self.place(BOT_L),
+            KeyCode::Char('2') if key_event.is_press() => self.place(BOT_M),
+            KeyCode::Char('3') if key_event.is_press() => self.place(BOT_R),
+            KeyCode::Char('4') if key_event.is_press() => self.place(MID_L),
+            KeyCode::Char('5') if key_event.is_press() => self.place(MID_M),
+            KeyCode::Char('6') if key_event.is_press() => self.place(MID_R),
+            KeyCode::Char('7') if key_event.is_press() => self.place(TOP_L),
+            KeyCode::Char('8') if key_event.is_press() => self.place(TOP_M),
+            KeyCode::Char('9') if key_event.is_press() => self.place(TOP_R),
             _ => {}
+        }
+    }
+
+    fn place(&mut self, position: u16) {
+        let GameState::Playing(player) = &self.game_state else {
+            return;
+        };
+
+        if !(self.bitboard_circle & position == 0 && self.bitboard_cross & position == 0) {
+            return;
+        }
+
+        match player {
+            Player::Circle => {
+                self.bitboard_circle += position;
+                self.game_state = Playing(Player::Cross)
+            }
+            Player::Cross => {
+                self.bitboard_cross += position;
+                self.game_state = Playing(Player::Circle)
+            }
         }
     }
 }
