@@ -1,13 +1,26 @@
+// pub const TOP_L: u16 = 0b100_000_000;
+// pub const TOP_M: u16 = 0b010_000_000;
+// pub const TOP_R: u16 = 0b001_000_000;
+// pub const MID_L: u16 = 0b000_100_000;
+// pub const MID_M: u16 = 0b000_010_000;
+// pub const MID_R: u16 = 0b000_001_000;
+// pub const BOT_L: u16 = 0b000_000_100;
+// pub const BOT_M: u16 = 0b000_000_010;
+// pub const BOT_R: u16 = 0b000_000_001;
+
 //Bitboard cell representation
-pub const TOP_L: u16 = 0b100_000_000;
-pub const TOP_M: u16 = 0b010_000_000;
-pub const TOP_R: u16 = 0b001_000_000;
-pub const MID_L: u16 = 0b000_100_000;
-pub const MID_M: u16 = 0b000_010_000;
-pub const MID_R: u16 = 0b000_001_000;
-pub const BOT_L: u16 = 0b000_000_100;
-pub const BOT_M: u16 = 0b000_000_010;
-pub const BOT_R: u16 = 0b000_000_001;
+#[derive(Clone, Copy)]
+pub enum BoardPosition {
+    TOP_L = 0b100_000_000,
+    TOP_M = 0b010_000_000,
+    TOP_R = 0b001_000_000,
+    MID_L = 0b000_100_000,
+    MID_M = 0b000_010_000,
+    MID_R = 0b000_001_000,
+    BOT_L = 0b000_000_100,
+    BOT_M = 0b000_000_010,
+    BOT_R = 0b000_000_001,
+}
 
 //Wining conditions
 pub const WIN_STATES: [u16; 8] = [

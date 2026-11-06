@@ -24,10 +24,11 @@ impl Board {
         }
     }
 
-    fn get_cell_type(&self, id: u16) -> CellType {
-        if self.bitboard_cross & id == id {
+    fn get_cell_type(&self, pos: BoardPosition) -> CellType {
+        let pos = pos as u16;
+        if self.bitboard_cross & pos == pos {
             CellType::Cross
-        } else if self.bitboard_circle & id == id {
+        } else if self.bitboard_circle & pos == pos {
             CellType::Circle
         } else {
             CellType::Empty
@@ -75,19 +76,31 @@ impl Widget for Board {
         //Calculate position of every cells
         let top = area.top() + (area.bottom() / 2) - (BOARD_DIM.1 / 2);
         let left = area.left() + (area.right() / 2) - (BOARD_DIM.0 / 2);
-        let cell_positions: [(u16, u16, u16); 9] = [
-            (left, top, TOP_L),
-            (left + CELL_DIM.0 + 3, top, TOP_M),
-            (left + (CELL_DIM.0 << 1) + 6, top, TOP_R),
-            (left, top + CELL_DIM.1 + 1, MID_L),
-            (left + CELL_DIM.0 + 3, top + CELL_DIM.1 + 1, MID_M),
-            (left + (CELL_DIM.0 << 1) + 6, top + CELL_DIM.1 + 1, MID_R),
-            (left, top + (CELL_DIM.1 << 1) + 2, BOT_L),
-            (left + CELL_DIM.0 + 3, top + (CELL_DIM.1 << 1) + 2, BOT_M),
+        let cell_positions: [(u16, u16, BoardPosition); 9] = [
+            (left, top, BoardPosition::TOP_L),
+            (left + CELL_DIM.0 + 3, top, BoardPosition::TOP_M),
+            (left + (CELL_DIM.0 << 1) + 6, top, BoardPosition::TOP_R),
+            (left, top + CELL_DIM.1 + 1, BoardPosition::MID_L),
+            (
+                left + CELL_DIM.0 + 3,
+                top + CELL_DIM.1 + 1,
+                BoardPosition::MID_M,
+            ),
+            (
+                left + (CELL_DIM.0 << 1) + 6,
+                top + CELL_DIM.1 + 1,
+                BoardPosition::MID_R,
+            ),
+            (left, top + (CELL_DIM.1 << 1) + 2, BoardPosition::BOT_L),
+            (
+                left + CELL_DIM.0 + 3,
+                top + (CELL_DIM.1 << 1) + 2,
+                BoardPosition::BOT_M,
+            ),
             (
                 left + (CELL_DIM.0 << 1) + 6,
                 top + (CELL_DIM.1 << 1) + 2,
-                BOT_R,
+                BoardPosition::BOT_R,
             ),
         ];
 
